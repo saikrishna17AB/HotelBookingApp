@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import '../services/widget_support.dart';
 
 class DetailPage extends StatefulWidget {
-  const DetailPage({super.key});
+  String name,price,wifi,hdtv,desc;
+  DetailPage({required this.desc,required this.hdtv,required this.wifi,required this.price,required this.name});
 
   @override
   State<DetailPage> createState() => _DetailPageState();
@@ -18,7 +19,7 @@ class _DetailPageState extends State<DetailPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children:[
             Stack(children:[
-            Container(
+            SizedBox(
               width: MediaQuery.of(context).size.width,
               height: MediaQuery.of(context).size.height/3,
               child: ClipRRect(
@@ -96,7 +97,7 @@ class _DetailPageState extends State<DetailPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SizedBox(height: 10.0,),
-                        Text("\Rs 4000 for 2 nights",style: AppWidget.headlinetextstyle(20.0),),
+                        Text("Rs 4000 for 2 nights",style: AppWidget.headlinetextstyle(20.0),),
                         SizedBox(height: 5.0,),
                         Text("Check-in-date",style: AppWidget.normaltextstyle(20.0),),
                         Divider(),

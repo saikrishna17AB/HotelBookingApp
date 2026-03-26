@@ -78,7 +78,7 @@ class _HomeState extends State<Home>{
                   child:Text("The most relevant", style: AppWidget.headlinetextstyle(22.0),)
                 ),
                 SizedBox(height:20.0,),
-                Container(
+                SizedBox(
                   height:300,
                   child: ListView(
                     scrollDirection: Axis.horizontal,
@@ -217,7 +217,7 @@ class _HomeState extends State<Home>{
                   child: Text("Discover new places",style: AppWidget.headlinetextstyle(20.0),),
                 ),
                 SizedBox(height:20.0,),
-                Container(
+                SizedBox(
                   height: 250,
                   child: ListView(
                     scrollDirection: Axis.horizontal,

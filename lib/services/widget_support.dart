@@ -24,6 +24,10 @@ class AppWidget{
     return TextStyle(color: Colors.white, fontSize: size, fontWeight:FontWeight.w500);
   }
 
+  static TextStyle boldwhitetextstyle(double size){
+    return TextStyle(color: Colors.white, fontSize: size, fontWeight:FontWeight.bold);
+  }
+
   static TextStyle headlinetextstyle(double size){
     return TextStyle(color: Colors.black, fontSize: size, fontWeight:FontWeight.bold,);
   }
