@@ -237,14 +237,14 @@ class _HomeState extends State<Home> {
           SizedBox(height: 20),
 
           SizedBox(
-            height: 250,
+            height: 280,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                buildCityCard("Mumbai"),
-                buildCityCard("Hyderabad"),
-                buildCityCard("Delhi"),
-                buildCityCard("Bengaluru"),
+                buildCityCard("Mumbai", "images/mumbai.jpg"),
+                buildCityCard("Dubai", "images/dubai.jpg"),
+                buildCityCard("New York", "images/newyork.jpg"),
+                buildCityCard("Bali", "images/bali.jpg"),
               ],
             ),
           ),
@@ -256,7 +256,7 @@ class _HomeState extends State<Home> {
   }
 
   // 🔥 CITY CARD
-  Widget buildCityCard(String city) {
+  Widget buildCityCard(String city, String imagePath) {
     return Container(
       margin: EdgeInsets.only(left: 20.0),
       child: Material(
@@ -273,8 +273,8 @@ class _HomeState extends State<Home> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(30),
                 child: Image.asset(
-                  "images/mumbai.jpg",
-                  height: 200,
+                  imagePath,
+                  height: 180,
                   width: 180,
                   fit: BoxFit.cover,
                 ),

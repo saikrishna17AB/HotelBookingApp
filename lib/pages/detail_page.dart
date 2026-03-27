@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../services/widget_support.dart';
-
+import '../services/database.dart';
+import '../services/shared_pref.dart';
+import 'package:random_string/random_string.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 class DetailPage extends StatefulWidget {
   final String name, price, desc;
   final bool wifi, hdtv;
@@ -337,6 +340,67 @@ class _DetailPageState extends State<DetailPage> {
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
+                  GestureDetector(
+                    onTap: () async {
+                      if (startDate == null || endDate == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            backgroundColor: Colors.orangeAccent,
+                            content: Text("Please select a Check-in and Check-out date"),
+                          ),
+                        );
+                        return;
+                      }
+
+                      String? userId = await SharedpreferenceHelper().getUserId() ?? FirebaseAuth.instance.currentUser?.uid;
+                      String? userName = await SharedpreferenceHelper().getUserName();
+
+                      if (userId == null) {
+                         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("User not logged in")));
+                         return;
+                      }
+
+                      String bookingId = randomAlphaNumeric(10);
+                      Map<String, dynamic> bookingInfoMap = {
+                        "hotelName": widget.name,
+                        "startDate": _formatDate(startDate),
+                        "endDate": _formatDate(endDate),
+                        "guests": guests,
+                        "totalAmount": finalamount,
+                        "userId": userId,
+                        "userName": userName ?? "User",
+                        "bookingId": bookingId,
+                        "status": "Booked",
+                      };
+
+                      await DatabaseMethods().bookHotel(bookingInfoMap, bookingId);
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          backgroundColor: Colors.green,
+                          content: Text("Booking successful!"),
+                        ),
+                      );
+                      
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      width: MediaQuery.of(context).size.width,
+                      padding: const EdgeInsets.symmetric(vertical: 15.0),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Book Now",
+                          style: AppWidget.whitetextstyle(20.0).copyWith(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                   ),

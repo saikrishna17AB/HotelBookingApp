@@ -16,5 +16,23 @@ class DatabaseMethods{
   Future<Stream<QuerySnapshot>> getallHotels() async{
     return await FirebaseFirestore.instance.collection("Hotel").snapshots();
   }
+
+  Future bookHotel(Map<String, dynamic> bookingInfo, String bookingId) async {
+    return await FirebaseFirestore.instance.collection("Bookings").doc(bookingId).set(bookingInfo);
+  }
+
+  Future<Stream<QuerySnapshot>> getUserBookings(String userId) async {
+    return await FirebaseFirestore.instance
+        .collection("Bookings")
+        .where("userId", isEqualTo: userId)
+        .snapshots();
+  }
+
+  Future<QuerySnapshot> getUserbyEmail(String email) async {
+    return await FirebaseFirestore.instance
+        .collection("users")
+        .where("Email", isEqualTo: email)
+        .get();
+  }
 } 
 

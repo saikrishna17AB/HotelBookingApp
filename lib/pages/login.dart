@@ -29,11 +29,22 @@ class _LogINState extends State<LogIN> {
       password: password,
     );
 
+    // ✅ Fetch user details from Firestore and update cache
+    var snapshot = await DatabaseMethods().getUserbyEmail(email);
+    if (snapshot.docs.isNotEmpty) {
+      var ds = snapshot.docs.first;
+      await SharedpreferenceHelper().saveUserName(ds["Name"]);
+      await SharedpreferenceHelper().saveUserEmail(ds["Email"]);
+      await SharedpreferenceHelper().saveUserId(ds["Id"]);
+    }
+
     // ✅ Redirect to Home (Bottomnav)
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => Bottomnav()),
-    );
+    if (mounted) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const Bottomnav()),
+      );
+    }
 
   } on FirebaseAuthException catch (e) {
 
@@ -62,9 +73,9 @@ class _LogINState extends State<LogIN> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Container(
-
-          child:Column(
+      body: SingleChildScrollView(
+        child: Container(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,          
             children:[
             Image.asset("images/login.png"),
@@ -162,8 +173,7 @@ class _LogINState extends State<LogIN> {
 
 
       ],),),
+      ),
     );
-
-    
   }
 }
