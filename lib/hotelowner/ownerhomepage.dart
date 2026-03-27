@@ -14,6 +14,6 @@ class _OwnerHomeState extends State<OwnerHome> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(child: Column(children: [],)),
-    )
+    );
   }
 }

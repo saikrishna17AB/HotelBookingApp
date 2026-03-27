@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:map/hotelowner/hoteldetails.dart';
+import 'package:map/pages/detail_page.dart';
 import 'pages/signup.dart';
+import 'pages/login.dart';
+import 'pages/home.dart';
+import 'pages/detail_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 void main() async{

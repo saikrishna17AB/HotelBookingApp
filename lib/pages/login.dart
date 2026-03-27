@@ -23,35 +23,38 @@ class _LogINState extends State<LogIN> {
   TextEditingController mailcontroller=TextEditingController();
 
   Future<void> userLogin() async {
-    try{
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      Navigator.push(context, MaterialPageRoute(builder: (context)=> Bottomnav()),);
-    } on FirebaseAuthException catch (e) {
-      if(e.code == 'user-not-found'){
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "No user found for that email",
-              style: TextStyle(fontSize: 18.0, color:Colors.black),
-            ),
-          ),
-        );
-      }
-      else if(e.code=="wrong-password"){
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              "Wrong Password provided by the user",
-              style: TextStyle(fontSize: 18.0, color:Colors.black),
-            ),
-          ),
-        );
-      }
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: email,
+      password: password,
+    );
+
+    // ✅ Redirect to Home (Bottomnav)
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => Bottomnav()),
+    );
+
+  } on FirebaseAuthException catch (e) {
+
+    String message = "Something went wrong";
+
+    if (e.code == 'user-not-found') {
+      message = "No user found for that email";
+    } else if (e.code == 'wrong-password') {
+      message = "Wrong password";
     }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(fontSize: 18.0, color: Colors.black),
+        ),
+      ),
+    );
   }
+}
 
 
 
@@ -160,5 +163,7 @@ class _LogINState extends State<LogIN> {
 
       ],),),
     );
+
+    
   }
 }

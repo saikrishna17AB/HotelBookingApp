@@ -1,150 +1,353 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../services/widget_support.dart';
 
 class DetailPage extends StatefulWidget {
-  String name,price,wifi,hdtv,desc;
-  DetailPage({required this.desc,required this.hdtv,required this.wifi,required this.price,required this.name});
+  final String name, price, desc;
+  final bool wifi, hdtv;
+
+  const DetailPage({
+    super.key,
+    required this.desc,
+    required this.hdtv,
+    required this.wifi,
+    required this.price,
+    required this.name,
+  });
 
   @override
   State<DetailPage> createState() => _DetailPageState();
 }
 
 class _DetailPageState extends State<DetailPage> {
+  TextEditingController guestscontroller = TextEditingController();
+
+  int baseAmount = 0;
+  int finalamount = 0;
+  int daysDifference = 1;
+  int guests = 1;
+
+  DateTime? startDate;
+  DateTime? endDate;
+
+  @override
+  void initState() {
+    super.initState();
+
+    int pricePerNight = int.parse(widget.price);
+
+    baseAmount = pricePerNight;   // default 1 night
+    finalamount = pricePerNight;  // initial amount
+  }
+
+  // 🔵 SELECT START DATE
+  Future<void> _selectStartDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: startDate ?? DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        startDate = picked;
+        _calculateDifference();
+      });
+    }
+  }
+
+  // 🔵 SELECT END DATE
+  Future<void> _selectEndDate(BuildContext context) async {
+    DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: endDate ?? (startDate ?? DateTime.now()),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (picked != null) {
+      setState(() {
+        endDate = picked;
+        _calculateDifference();
+      });
+    }
+  }
+
+  // 🔥 CALCULATE DAYS + PRICE
+  void _calculateDifference() {
+    if (startDate != null && endDate != null) {
+      int days = endDate!.difference(startDate!).inDays;
+
+      if (days <= 0) days = 1;
+
+      daysDifference = days;
+
+      baseAmount = int.parse(widget.price) * daysDifference;
+      finalamount = baseAmount * guests;
+
+      setState(() {});
+    }
+  }
+
+  // 🔵 FORMAT DATE
+  String _formatDate(DateTime? date) {
+    return date != null
+        ? DateFormat("dd MMM yyyy").format(date)
+        : "Select Date";
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
-       child: Container(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children:[
-            Stack(children:[
-            SizedBox(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height/3,
-              child: ClipRRect(
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(50), 
-                  bottomRight: Radius.circular(50),
-                ),
-                child: Image.asset("images/hotel1.jpg", fit: BoxFit.cover,)
-              ),
-            ),
-          GestureDetector(
-            onTap: (){
-              Navigator.pop(context);
-            },
-            child: Container(
-              padding: EdgeInsets.all(5),
-              margin: EdgeInsets.only(top:50.0, left:20.0),
-              decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(60)),
-              child: Icon(Icons.arrow_back, color: Colors.white,size: 30.0,),
-            ),
-          )
-        ],
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 20.0, right: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SizedBox(height: 20.0,),
-              Text("Hotel Marina", style:AppWidget.headlinetextstyle(22.0),),
-              Text("/Rs2000/night", style:AppWidget.normaltextstyle(27.0),),
-              Divider(thickness: 2.0,),
-              SizedBox(height: 10.0,),
-              Text("What this place offers", style: AppWidget.headlinetextstyle(22.0),),
-              
-              SizedBox(height: 5.0,),
-              Row(children:[
-                Icon(Icons.wifi, color: const Color.fromARGB(141, 33, 149, 243)),
-                SizedBox(width: 10.0,),
-                Text("WIFI", style: AppWidget.normaltextstyle(23.0),),
-                
-              ],),  
+          children: [
 
-              SizedBox(height: 5.0,),
-              Row(
-                children: [
-                  Icon(Icons.tv, color: const Color.fromARGB(141, 33, 149, 243)),
-                  SizedBox(width: 10.0,),
-                  Text("HDTV", style: AppWidget.normaltextstyle(23.0),),
-                  
-
-                ],
-              ),
-                
-              SizedBox(height: 5.0,),
-              Row(children:[
-                Icon(Icons.kitchen, color: const Color.fromARGB(141, 33, 149, 243)),
-                SizedBox(width: 10.0,),
-                Text("Kitchen", style: AppWidget.normaltextstyle(23.0),),
-              ],),  
-                Divider(thickness: 2.0,),
-                SizedBox(height: 5.0,),
-                Text("About this place", style: AppWidget.headlinetextstyle(22.0),),
-                SizedBox(height: 5.0,),
-                Text("Experience comfort and luxury at our hotel, where every stay feels like home.Enjoy beautifully designed rooms, delicious dining, and exceptional service.Perfect for business trips, family vacations, or relaxing getaways.Book your stay today and create unforgettable memories with us",style: AppWidget.normaltextstyle(16.0,),),
-                SizedBox(height:20.0,),
-                Material(
-                  elevation: 2.0,
-                  borderRadius: BorderRadius.circular(20),
-                  child: Container(
-                    padding: EdgeInsets.all(10),  
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(height: 10.0,),
-                        Text("Rs 4000 for 2 nights",style: AppWidget.headlinetextstyle(20.0),),
-                        SizedBox(height: 5.0,),
-                        Text("Check-in-date",style: AppWidget.normaltextstyle(20.0),),
-                        Divider(),
-                        Row(
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(5),
-                              decoration: BoxDecoration(color: Colors.blue,borderRadius: BorderRadius.circular(20),),
-                              child: Icon(Icons.calendar_month, color: Colors.white,size: 30.0,),
-
-                            ),
-                            SizedBox(width: 10.0,),
-                            Text("09,March 2026",style: AppWidget.normaltextstyle(20.0),),
-                          ],),
-
-
-                          SizedBox(height: 5.0,),
-                          Text("Check-out-date",style: AppWidget.normaltextstyle(20.0),),
-                          Divider(),
-                          Row(
-                            children: [
-                              Container(
-                                padding: EdgeInsets.all(5),
-                                decoration: BoxDecoration(color: Colors.blue,borderRadius: BorderRadius.circular(20),),
-                                child: Icon(Icons.calendar_month, color: Colors.white,size: 30.0,),
-
-                              ),
-                              SizedBox(width: 10.0,),
-                              Text("10,March 2026",style: AppWidget.normaltextstyle(20.0),),
-                            ],),
-                            Text("Number of guests",style: AppWidget.normaltextstyle(20.0),), 
-                      ],
+            // 🔵 IMAGE + BACK BUTTON
+            Stack(
+              children: [
+                SizedBox(
+                  width: MediaQuery.of(context).size.width,
+                  height: MediaQuery.of(context).size.height / 3,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(50),
+                      bottomRight: Radius.circular(50),
+                    ),
+                    child: Image.asset(
+                      "images/hotel1.jpg",
+                      fit: BoxFit.cover,
                     ),
                   ),
                 ),
 
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    margin: const EdgeInsets.only(top: 50.0, left: 20.0),
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: BorderRadius.circular(60),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_back,
+                      color: Colors.white,
+                      size: 30.0,
+                    ),
+                  ),
+                )
+              ],
+            ),
 
-                
-                SizedBox(height:30.0,),
-            
-            
-            ],
-          ),
+            // 🔵 CONTENT
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+
+                  const SizedBox(height: 20),
+
+                  Text(
+                    widget.name,
+                    style: AppWidget.headlinetextstyle(22.0),
+                  ),
+
+                  Text(
+                    "₹${widget.price}",
+                    style: AppWidget.normaltextstyle(27.0),
+                  ),
+
+                  const Divider(thickness: 2),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    "What this place offers",
+                    style: AppWidget.headlinetextstyle(22.0),
+                  ),
+
+                  const SizedBox(height: 10),
+
+                  if (widget.wifi)
+                    Row(
+                      children: [
+                        const Icon(Icons.wifi, color: Colors.blue),
+                        const SizedBox(width: 10),
+                        Text("WiFi",
+                            style: AppWidget.normaltextstyle(20.0)),
+                      ],
+                    ),
+
+                  const SizedBox(height: 5),
+
+                  if (widget.hdtv)
+                    Row(
+                      children: [
+                        const Icon(Icons.tv, color: Colors.blue),
+                        const SizedBox(width: 10),
+                        Text("HDTV",
+                            style: AppWidget.normaltextstyle(20.0)),
+                      ],
+                    ),
+
+                  const Divider(thickness: 2),
+
+                  const SizedBox(height: 10),
+
+                  Text(
+                    "About this place",
+                    style: AppWidget.headlinetextstyle(22.0),
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  Text(
+                    widget.desc,
+                    style: AppWidget.normaltextstyle(16.0),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // 🔥 BOOKING SECTION
+                  Material(
+                    elevation: 2.0,
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.all(15),
+                      width: MediaQuery.of(context).size.width,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+
+                          Text(
+                            "₹$finalamount",
+                            style: AppWidget.headlinetextstyle(22.0),
+                          ),
+
+                          const SizedBox(height: 5),
+
+                          Text(
+                            "₹${widget.price} × $daysDifference night(s) × $guests guest(s)",
+                            style: AppWidget.normaltextstyle(16.0),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // 🔵 CHECK-IN
+                          const Text("Check-in-date"),
+                          const Divider(),
+
+                          GestureDetector(
+                            onTap: () => _selectStartDate(context),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_month,
+                                    color: Colors.blue),
+                                const SizedBox(width: 10),
+                                Text(_formatDate(startDate)),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // 🔵 CHECK-OUT
+                          const Text("Check-out-date"),
+                          const Divider(),
+
+                          GestureDetector(
+                            onTap: () => _selectEndDate(context),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.calendar_month,
+                                    color: Colors.blue),
+                                const SizedBox(width: 10),
+                                Text(_formatDate(endDate)),
+                              ],
+                            ),
+                          ),
+
+                          const SizedBox(height: 15),
+
+                          // 🔵 GUESTS
+                          Text(
+                            "Number of Guests",
+                            style: AppWidget.normaltextstyle(20.0),
+                          ),
+
+                          const SizedBox(height: 5),
+
+                          Container(
+                            padding: const EdgeInsets.only(left: 20.0),
+                            decoration: BoxDecoration(
+                              color: Color.fromARGB(12, 45, 14, 20),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: TextField(
+                              keyboardType: TextInputType.number,
+                              controller: guestscontroller,
+                              decoration: const InputDecoration(
+                                border: InputBorder.none,
+                                hintText: "1",
+                              ),
+                              onChanged: (value) {
+                                if (value.isNotEmpty &&
+                                    int.tryParse(value) != null) {
+                                  guests = int.parse(value);
+                                } else {
+                                  guests = 1;
+                                }
+
+                                finalamount = baseAmount * guests;
+
+                                setState(() {});
+                              },
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // 🔥 TOTAL BOX
+                          Container(
+                            padding: const EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                            child: Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "Total Amount",
+                                  style: AppWidget.headlinetextstyle(20.0),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  "₹$finalamount",
+                                  style: AppWidget.headlinetextstyle(24.0),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 30),
+                ],
+              ),
+            ),
+          ],
         ),
-    
-      ],),)
-    ),
+      ),
     );
   }
 }
