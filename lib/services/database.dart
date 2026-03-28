@@ -34,5 +34,36 @@ class DatabaseMethods{
         .where("Email", isEqualTo: email)
         .get();
   }
+
+  Future addHotelFeedback(String hotelName, Map<String, dynamic> feedbackData) async {
+    return await FirebaseFirestore.instance
+        .collection("Hotel")
+        .doc(hotelName)
+        .collection("Feedbacks")
+        .add(feedbackData);
+  }
+
+  Future<Stream<QuerySnapshot>> getHotelFeedbacks(String hotelName) async {
+    return await FirebaseFirestore.instance
+        .collection("Hotel")
+        .doc(hotelName)
+        .collection("Feedbacks")
+        .orderBy("date", descending: true)
+        .snapshots();
+  }
+
+  Future updateBookingFeedbackStatus(String bookingId) async {
+    return await FirebaseFirestore.instance
+        .collection("Bookings")
+        .doc(bookingId)
+        .update({"hasFeedback": true});
+  }
+
+  Future<QuerySnapshot> getHotelBookingsFuture(String hotelName) async {
+    return await FirebaseFirestore.instance
+        .collection("Bookings")
+        .where("hotelName", isEqualTo: hotelName)
+        .get();
+  }
 } 
 

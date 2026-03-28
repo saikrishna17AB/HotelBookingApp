@@ -77,7 +77,7 @@ class _BookingState extends State<Booking> {
                         children: [
                           Expanded(
                             child: Text(
-                              ds["hotelName"] ?? "Unknown Hotel",
+                              (ds.data() as Map<String, dynamic>)["hotelName"] ?? "Unknown Hotel",
                               style: AppWidget.headlinetextstyle(20.0),
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -89,7 +89,7 @@ class _BookingState extends State<Booking> {
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
-                              ds["status"] ?? "Booked",
+                              (ds.data() as Map<String, dynamic>)["status"] ?? "Booked",
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
                             ),
                           )
@@ -100,15 +100,15 @@ class _BookingState extends State<Booking> {
                         children: [
                           const Icon(Icons.calendar_month, color: Colors.blue),
                           const SizedBox(width: 5),
-                          Text("${ds["startDate"]} to ${ds["endDate"]}", style: AppWidget.normaltextstyle(16.0)),
+                          Text("${(ds.data() as Map<String, dynamic>)["startDate"]} to ${(ds.data() as Map<String, dynamic>)["endDate"]}", style: AppWidget.normaltextstyle(16.0)),
                         ],
                       ),
                       const SizedBox(height: 10),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text("Guests: ${ds["guests"]}", style: AppWidget.normaltextstyle(18.0)),
-                          Text("₹${ds["totalAmount"]}", style: AppWidget.headlinetextstyle(20.0)),
+                          Text("Guests: ${(ds.data() as Map<String, dynamic>)["guests"]} | Rooms: ${(ds.data() as Map<String, dynamic>)["rooms"] ?? 1}", style: AppWidget.normaltextstyle(16.0)),
+                          Text("₹${(ds.data() as Map<String, dynamic>)["totalAmount"]}", style: AppWidget.headlinetextstyle(20.0)),
                         ],
                       ),
                     ],

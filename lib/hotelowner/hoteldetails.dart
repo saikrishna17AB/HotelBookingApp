@@ -22,6 +22,8 @@ class _HoteldetailState extends State<Hoteldetail> {
   TextEditingController hotelchargescontroller = TextEditingController();
   TextEditingController hoteladdresscontroller = TextEditingController();
   TextEditingController hoteldesccontroller = TextEditingController();
+  TextEditingController hotelroomscontroller = TextEditingController();
+  TextEditingController initialbookedcontroller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -96,6 +98,33 @@ class _HoteldetailState extends State<Hoteldetail> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: "Enter room price",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // 🔹 TOTAL ROOMS
+                      Text("Total Rooms Available", style: AppWidget.normaltextstyle(20.0)),
+                      SizedBox(height: 5),
+                      TextField(
+                        controller: hotelroomscontroller,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: "Enter total number of rooms",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      Text("Currently Booked Rooms (if any)", style: AppWidget.normaltextstyle(20.0)),
+                      SizedBox(height: 5),
+                      TextField(
+                        controller: initialbookedcontroller,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          hintText: "Enter number of already occupied rooms",
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -190,6 +219,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                           // ✅ VALIDATION
                           if (hotelnamecontroller.text.isEmpty ||
                               hotelchargescontroller.text.isEmpty ||
+                              hotelroomscontroller.text.isEmpty ||
                               hoteladdresscontroller.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text("Please fill all fields")),
@@ -203,6 +233,8 @@ class _HoteldetailState extends State<Hoteldetail> {
                             "image": "images/hotel1.jpg", // 🔥 STATIC IMAGE
                             "name": hotelnamecontroller.text,
                             "price": hotelchargescontroller.text,
+                            "totalRooms": int.tryParse(hotelroomscontroller.text) ?? 5,
+                            "currentlyBooked": int.tryParse(initialbookedcontroller.text) ?? 0,
                             "location": hoteladdresscontroller.text,
                             "description": hoteldesccontroller.text,
                             "wifi": isWifi,

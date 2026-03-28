@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/widget_support.dart';
+import '../services/database.dart';
+import '../services/shared_pref.dart';
 
 class BookingDetail extends StatelessWidget {
   final Map<String, dynamic> bookingData;
@@ -65,9 +67,35 @@ class BookingDetail extends StatelessWidget {
               const SizedBox(height: 15),
               _buildDetailRow(Icons.person, "Guests", "${bookingData["guests"] ?? "1"}"),
               const SizedBox(height: 15),
+              _buildDetailRow(Icons.hotel_outlined, "Rooms", "${bookingData["rooms"] ?? "1"}"),
+              const SizedBox(height: 15),
               _buildDetailRow(Icons.money, "Total Amount", "₹${bookingData["totalAmount"] ?? "0"}"),
               
               const SizedBox(height: 30),
+              
+              if (bookingData["hasFeedback"] != true)
+                Center(
+                  child: GestureDetector(
+                    onTap: () {
+                      _showFeedbackDialog(context);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 15.0),
+                      margin: const EdgeInsets.only(bottom: 15.0),
+                      decoration: BoxDecoration(
+                        color: Colors.orange,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          "Rate Hotel",
+                          style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
               
               Center(
                 child: ElevatedButton(
@@ -89,6 +117,92 @@ class BookingDetail extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void _showFeedbackDialog(BuildContext context) {
+    int rating = 0;
+    TextEditingController feedbackController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(builder: (context, setState) {
+          return AlertDialog(
+            title: Text("Rate ${bookingData["hotelName"]}", style: AppWidget.headlinetextstyle(20.0)),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: List.generate(5, (index) {
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            rating = index + 1;
+                          });
+                        },
+                        child: Icon(
+                          index < rating ? Icons.star : Icons.star_border,
+                          color: Colors.orange,
+                          size: 32,
+                        ),
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: 15),
+                  TextField(
+                    controller: feedbackController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: "Write your feedback (optional)...",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel", style: TextStyle(color: Colors.grey)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
+                onPressed: () async {
+                  if (rating == 0) {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Please provide a rating")));
+                    return;
+                  }
+                  
+                  // Save feedback
+                  String? username = await SharedpreferenceHelper().getUserName();
+                  Map<String, dynamic> feedbackMap = {
+                    "rating": rating,
+                    "review": feedbackController.text,
+                    "username": username ?? "Anonymous",
+                    "date": DateTime.now().toIso8601String(),
+                  };
+                  
+                  await DatabaseMethods().addHotelFeedback(bookingData["hotelName"], feedbackMap);
+                  await DatabaseMethods().updateBookingFeedbackStatus(bookingData["bookingId"]);
+                  
+                  if (context.mounted) {
+                    Navigator.pop(context); // close dialog
+                    Navigator.pop(context); // back to bookings so it refreshes via stream
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text("Thank you for your feedback!"),
+                      backgroundColor: Colors.green,
+                    ));
+                  }
+                },
+                child: const Text("Submit", style: TextStyle(color: Colors.white)),
+              )
+            ],
+          );
+        });
+      }
     );
   }
 

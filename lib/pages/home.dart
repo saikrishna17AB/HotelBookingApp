@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:map/pages/detail_page.dart';
 import 'package:map/services/database.dart';
 import '../services/widget_support.dart';
@@ -46,16 +47,19 @@ class _HomeState extends State<Home> {
 
             return GestureDetector(
               onTap:(){
-              Navigator.push(context, MaterialPageRoute(builder: 
-                (context)=> DetailPage(
-                desc: ds["description"] ?? "",
-                hdtv: ds["hdtv"] ?? false,
-                wifi: ds["wifi"] ?? false,
-                price: ds["price"] ?? "0",
-                name: ds["name"] ?? "No Name",
-                              ),
-                ),
-              );
+                Map<String, dynamic> data = ds.data() as Map<String, dynamic>;
+                Navigator.push(context, MaterialPageRoute(builder: 
+                  (context)=> DetailPage(
+                  desc: data["description"] ?? "",
+                  hdtv: data["hdtv"] ?? false,
+                  wifi: data["wifi"] ?? false,
+                  price: data["price"] ?? "0",
+                  name: data["name"] ?? "No Name",
+                  totalRooms: data["totalRooms"] ?? 5,
+                  currentlyBooked: data["currentlyBooked"] ?? 0,
+                                ),
+                  ),
+                );
               },
               child: Container(
                 width: MediaQuery.of(context).size.width / 1.2,
@@ -76,7 +80,7 @@ class _HomeState extends State<Home> {
                           child: Image.asset(
                             ds["image"] ?? "images/hotel1.jpg",
                             width: double.infinity,
-                            height: 200,
+                            height: 130,
                             fit: BoxFit.cover,
                           ),
                         ),
@@ -89,14 +93,14 @@ class _HomeState extends State<Home> {
                             children: [
                               Expanded(
                                 child: Text(
-                                  ds["name"] ?? "No Name",
+                                  (ds.data() as Map<String, dynamic>)["name"] ?? "No Name",
                                   style:
                                       AppWidget.headlinetextstyle(18.0),
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
                               Text(
-                                "₹${ds["price"] ?? "0"}",
+                                "₹${(ds.data() as Map<String, dynamic>)["price"] ?? "0"}",
                                 style:
                                     AppWidget.headlinetextstyle(20.0),
                               ),
@@ -104,6 +108,46 @@ class _HomeState extends State<Home> {
                           ),
                         ),
               
+                        SizedBox(height: 2),
+ 
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 15),
+                          child: FutureBuilder<Stream<QuerySnapshot>>(
+                            future: DatabaseMethods().getHotelFeedbacks((ds.data() as Map<String, dynamic>)["name"] ?? ""),
+                            builder: (context, futureSnapshot) {
+                              if (!futureSnapshot.hasData) return SizedBox.shrink();
+                              return StreamBuilder<QuerySnapshot>(
+                                stream: futureSnapshot.data,
+                                builder: (context, streamSnapshot) {
+                                  if (!streamSnapshot.hasData || streamSnapshot.data!.docs.isEmpty) {
+                                    return Row(
+                                      children: [
+                                        Icon(Icons.star, color: Colors.orange, size: 16),
+                                        SizedBox(width: 4),
+                                        Text("New", style: TextStyle(color: Colors.grey, fontSize: 14)),
+                                      ],
+                                    );
+                                  }
+                                  double total = 0;
+                                  for (var doc in streamSnapshot.data!.docs) {
+                                     total += (doc.data() as Map<String, dynamic>)["rating"] ?? 0;
+                                  }
+                                  double avg = total / streamSnapshot.data!.docs.length;
+                                  return Row(
+                                    children: [
+                                      Icon(Icons.star, color: Colors.orange, size: 16),
+                                      SizedBox(width: 4),
+                                      Text("${avg.toStringAsFixed(1)}", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                                      SizedBox(width: 4),
+                                      Text("(${streamSnapshot.data!.docs.length})", style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    ],
+                                  );
+                                }
+                              );
+                            }
+                          )
+                        ),
+ 
                         SizedBox(height: 5),
               
                         Padding(
@@ -116,7 +160,7 @@ class _HomeState extends State<Home> {
                               SizedBox(width: 5),
                               Expanded(
                                 child: Text(
-                                  ds["location"] ?? "Unknown",
+                                  (ds.data() as Map<String, dynamic>)["location"] ?? "Unknown",
                                   style:
                                       AppWidget.normaltextstyle(16.0),
                                   overflow: TextOverflow.ellipsis,
@@ -221,7 +265,7 @@ class _HomeState extends State<Home> {
           SizedBox(height: 20),
 
           SizedBox(
-            height: 280,
+            height: 320,
             child: allHotels(),
           ),
 
