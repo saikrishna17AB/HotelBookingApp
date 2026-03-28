@@ -5,8 +5,9 @@ import '../services/shared_pref.dart';
 
 class BookingDetail extends StatelessWidget {
   final Map<String, dynamic> bookingData;
+  final bool isOwner;
 
-  const BookingDetail({super.key, required this.bookingData});
+  const BookingDetail({super.key, required this.bookingData, this.isOwner = false});
 
   @override
   Widget build(BuildContext context) {
@@ -72,8 +73,46 @@ class BookingDetail extends StatelessWidget {
               _buildDetailRow(Icons.money, "Total Amount", "₹${bookingData["totalAmount"] ?? "0"}"),
               
               const SizedBox(height: 30),
+
+              // 🔥 REVIEW SECTION
+              if (bookingData["hasFeedback"] == true) ...[
+                const Divider(),
+                const SizedBox(height: 15),
+                Text("Guest Review", style: AppWidget.headlinetextstyle(22.0)),
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.all(15),
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: List.generate(5, (index) {
+                          return Icon(
+                            index < (bookingData["rating"] ?? 0) ? Icons.star : Icons.star_border,
+                            color: Colors.orange,
+                            size: 24,
+                          );
+                        }),
+                      ),
+                      if (bookingData["review"] != null && bookingData["review"].toString().isNotEmpty) ...[
+                        const SizedBox(height: 10),
+                        Text(
+                          "\"${bookingData["review"]}\"",
+                          style: AppWidget.normaltextstyle(16.0).copyWith(fontStyle: FontStyle.italic),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 30),
+              ],
               
-              if (bookingData["hasFeedback"] != true)
+              if (bookingData["hasFeedback"] != true && !isOwner)
                 Center(
                   child: GestureDetector(
                     onTap: () {
@@ -107,9 +146,9 @@ class BookingDetail extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
                   ),
-                  child: const Text(
-                    "Back to My Bookings",
-                    style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                  child: Text(
+                    isOwner ? "Back" : "Back to My Bookings",
+                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
@@ -186,7 +225,7 @@ class BookingDetail extends StatelessWidget {
                   };
                   
                   await DatabaseMethods().addHotelFeedback(bookingData["hotelName"], feedbackMap);
-                  await DatabaseMethods().updateBookingFeedbackStatus(bookingData["bookingId"]);
+                  await DatabaseMethods().updateBookingFeedbackStatus(bookingData["bookingId"], rating, feedbackController.text);
                   
                   if (context.mounted) {
                     Navigator.pop(context); // close dialog

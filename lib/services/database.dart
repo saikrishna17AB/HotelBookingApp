@@ -10,7 +10,14 @@ class DatabaseMethods{
 
   Future addHotel(Map<String, dynamic> hotelinfoMap,String id) async {
     return await FirebaseFirestore.instance.collection("Hotel").doc(id).set(hotelinfoMap);
+  }
 
+  Future addHotelOwnerInfo(Map<String, dynamic> userInfoMap, String id) async {
+    return await FirebaseFirestore.instance.collection("hotelOwners").doc(id).set(userInfoMap);
+  }
+
+  Future deleteHotel(String id) async {
+    return await FirebaseFirestore.instance.collection("Hotel").doc(id).delete();
   }
 
   Future<Stream<QuerySnapshot>> getallHotels() async{
@@ -28,9 +35,23 @@ class DatabaseMethods{
         .snapshots();
   }
 
+  Future<Stream<QuerySnapshot>> getOwnerBookings(String ownerEmail) async {
+    return await FirebaseFirestore.instance
+        .collection("Bookings")
+        .where("ownerEmail", isEqualTo: ownerEmail)
+        .snapshots();
+  }
+
   Future<QuerySnapshot> getUserbyEmail(String email) async {
     return await FirebaseFirestore.instance
         .collection("users")
+        .where("Email", isEqualTo: email)
+        .get();
+  }
+
+  Future<QuerySnapshot> getHotelOwnerByEmail(String email) async {
+    return await FirebaseFirestore.instance
+        .collection("hotelOwners")
         .where("Email", isEqualTo: email)
         .get();
   }
@@ -52,11 +73,15 @@ class DatabaseMethods{
         .snapshots();
   }
 
-  Future updateBookingFeedbackStatus(String bookingId) async {
+  Future updateBookingFeedbackStatus(String bookingId, int rating, String review) async {
     return await FirebaseFirestore.instance
         .collection("Bookings")
         .doc(bookingId)
-        .update({"hasFeedback": true});
+        .update({
+      "hasFeedback": true,
+      "rating": rating,
+      "review": review,
+    });
   }
 
   Future<QuerySnapshot> getHotelBookingsFuture(String hotelName) async {

@@ -7,6 +7,8 @@ import 'package:random_string/random_string.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/database.dart';
 import '../services/shared_pref.dart';
+import '../hotelowner/ownerhomepage.dart';
+import '../hotelowner/owner_bottomnav.dart';
 import 'package:map/services/database.dart';
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -21,6 +23,7 @@ class _SignUpState extends State<SignUp> {
   TextEditingController namecontroller= TextEditingController();
   TextEditingController passwordcontroller=TextEditingController();
   TextEditingController mailcontroller=TextEditingController();
+  String selectedRole = "User"; // Default role
 
   Future<void> registration() async {
     if(password !="" && namecontroller.text != "" && mailcontroller.text!= ""){
@@ -40,8 +43,15 @@ class _SignUpState extends State<SignUp> {
         await SharedpreferenceHelper().saveUserName(namecontroller.text);
         await SharedpreferenceHelper().saveUserEmail(mailcontroller.text);
         await SharedpreferenceHelper().saveUserId(id);
+        await SharedpreferenceHelper().saveUserRole(selectedRole);
 
-        await DatabaseMethods().addUserInfo(userInfoMap, id);
+        if (selectedRole == "User") {
+          await DatabaseMethods().addUserInfo(userInfoMap, id);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Bottomnav()));
+        } else {
+          await DatabaseMethods().addHotelOwnerInfo(userInfoMap, id);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OwnerBottomNav()));
+        }
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               backgroundColor: Colors.green,
@@ -51,7 +61,7 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
           );
-          Navigator.push(context,MaterialPageRoute(builder:(context)=> Bottomnav()),);
+          // Navigator.push(context,MaterialPageRoute(builder:(context)=> Bottomnav()),);
 
 
       } on FirebaseAuthException catch (e) {
@@ -157,7 +167,51 @@ class _SignUpState extends State<SignUp> {
               hintText: "Enter Password",
               hintStyle: AppWidget.normaltextstyle(18.0) 
             ),
+          ),
+        ),
 
+        SizedBox(height: 20.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              GestureDetector(
+                onTap: () => setState(() => selectedRole = "User"),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  decoration: BoxDecoration(
+                    color: selectedRole == "User" ? Colors.green : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "User",
+                    style: TextStyle(
+                      color: selectedRole == "User" ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(width: 20),
+              GestureDetector(
+                onTap: () => setState(() => selectedRole = "Owner"),
+                child: Container(
+                  padding: EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                  decoration: BoxDecoration(
+                    color: selectedRole == "Owner" ? Colors.green : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    "Hotel Owner",
+                    style: TextStyle(
+                      color: selectedRole == "Owner" ? Colors.white : Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
 

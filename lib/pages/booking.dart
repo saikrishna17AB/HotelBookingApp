@@ -54,6 +54,7 @@ class _BookingState extends State<Booking> {
                   MaterialPageRoute(
                     builder: (context) => BookingDetail(
                       bookingData: ds.data() as Map<String, dynamic>,
+                      isOwner: false,
                     ),
                   ),
                 );
@@ -95,6 +96,24 @@ class _BookingState extends State<Booking> {
                           )
                         ],
                       ),
+                      const SizedBox(height: 5),
+                      // 🔥 STAR RATING ON CARD
+                      if ((ds.data() as Map<String, dynamic>)["hasFeedback"] == true)
+                        Row(
+                          children: [
+                            Row(
+                              children: List.generate(5, (index) {
+                                return Icon(
+                                  index < ((ds.data() as Map<String, dynamic>)["rating"] ?? 0) ? Icons.star : Icons.star_border,
+                                  color: Colors.orange,
+                                  size: 18,
+                                );
+                              }),
+                            ),
+                            const SizedBox(width: 5),
+                            const Text("Rating", style: TextStyle(color: Colors.grey, fontSize: 13)),
+                          ],
+                        ),
                       const SizedBox(height: 10),
                       Row(
                         children: [

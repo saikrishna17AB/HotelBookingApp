@@ -7,7 +7,7 @@ import '../services/shared_pref.dart';
 import 'package:random_string/random_string.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 class DetailPage extends StatefulWidget {
-  final String name, price, desc;
+  final String name, price, desc, ownerEmail;
   final int totalRooms, currentlyBooked;
   final bool wifi, hdtv;
 
@@ -16,10 +16,11 @@ class DetailPage extends StatefulWidget {
     required this.desc,
     required this.hdtv,
     required this.wifi,
-    required this.price,
     required this.name,
+    required this.price,
     required this.totalRooms,
     required this.currentlyBooked,
+    required this.ownerEmail,
   });
 
   @override
@@ -560,6 +561,7 @@ class _DetailPageState extends State<DetailPage> {
                         "userName": userName ?? "User",
                         "bookingId": bookingId,
                         "status": "Booked",
+                        "ownerEmail": widget.ownerEmail,
                       };
 
                       await DatabaseMethods().bookHotel(bookingInfoMap, bookingId);

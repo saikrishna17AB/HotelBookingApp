@@ -3,6 +3,7 @@ import '../services/widget_support.dart';
 import '../hotelowner/ownerhomepage.dart';
 import 'package:random_string/random_string.dart';
 import '../services/database.dart';
+import '../services/shared_pref.dart';
 
 class Hoteldetail extends StatefulWidget {
   const Hoteldetail({super.key});
@@ -12,6 +13,18 @@ class Hoteldetail extends StatefulWidget {
 }
 
 class _HoteldetailState extends State<Hoteldetail> {
+  String? ownerEmail;
+
+  @override
+  void initState() {
+    super.initState();
+    getOnLoad();
+  }
+
+  getOnLoad() async {
+    ownerEmail = await SharedpreferenceHelper().getUserEmail();
+    setState(() {});
+  }
 
   bool isWifi = false;
   bool isHdtv = false;
@@ -24,6 +37,7 @@ class _HoteldetailState extends State<Hoteldetail> {
   TextEditingController hoteldesccontroller = TextEditingController();
   TextEditingController hotelroomscontroller = TextEditingController();
   TextEditingController initialbookedcontroller = TextEditingController();
+  TextEditingController hotelcitycontroller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -125,6 +139,19 @@ class _HoteldetailState extends State<Hoteldetail> {
                         keyboardType: TextInputType.number,
                         decoration: InputDecoration(
                           hintText: "Enter number of already occupied rooms",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // 🔹 CITY
+                      Text("Hotel City", style: AppWidget.normaltextstyle(20.0)),
+                      SizedBox(height: 5),
+                      TextField(
+                        controller: hotelcitycontroller,
+                        decoration: InputDecoration(
+                          hintText: "Enter city (e.g. Delhi, Mumbai)",
                           border: OutlineInputBorder(),
                         ),
                       ),
@@ -242,6 +269,8 @@ class _HoteldetailState extends State<Hoteldetail> {
                             "food": isFood,
                             "pool": isPool,
                             "id": addId,
+                            "city": hotelcitycontroller.text.trim().isEmpty ? "Delhi" : hotelcitycontroller.text.trim(),
+                            "ownerEmail": ownerEmail ?? "Legacy", // Default value for safety
                           };
 
                           await DatabaseMethods().addHotel(addHotel, addId);
