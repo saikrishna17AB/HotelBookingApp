@@ -25,7 +25,7 @@ class _OwnerBookingsState extends State<OwnerBookings> {
   getOnLoad() async {
     ownerEmail = await SharedpreferenceHelper().getUserEmail();
     if (ownerEmail != null) {
-      bookingStream = await DatabaseMethods().getOwnerBookings(ownerEmail!);
+      bookingStream = DatabaseMethods().getOwnerBookings(ownerEmail!);
     }
     setState(() {});
   }

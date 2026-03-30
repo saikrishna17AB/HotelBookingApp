@@ -20,23 +20,23 @@ class DatabaseMethods{
     return await FirebaseFirestore.instance.collection("Hotel").doc(id).delete();
   }
 
-  Future<Stream<QuerySnapshot>> getallHotels() async{
-    return await FirebaseFirestore.instance.collection("Hotel").snapshots();
+  Stream<QuerySnapshot> getallHotels() {
+    return FirebaseFirestore.instance.collection("Hotel").snapshots();
   }
 
   Future bookHotel(Map<String, dynamic> bookingInfo, String bookingId) async {
     return await FirebaseFirestore.instance.collection("Bookings").doc(bookingId).set(bookingInfo);
   }
 
-  Future<Stream<QuerySnapshot>> getUserBookings(String userId) async {
-    return await FirebaseFirestore.instance
+  Stream<QuerySnapshot> getUserBookings(String userId) {
+    return FirebaseFirestore.instance
         .collection("Bookings")
         .where("userId", isEqualTo: userId)
         .snapshots();
   }
 
-  Future<Stream<QuerySnapshot>> getOwnerBookings(String ownerEmail) async {
-    return await FirebaseFirestore.instance
+  Stream<QuerySnapshot> getOwnerBookings(String ownerEmail) {
+    return FirebaseFirestore.instance
         .collection("Bookings")
         .where("ownerEmail", isEqualTo: ownerEmail)
         .snapshots();
@@ -64,8 +64,8 @@ class DatabaseMethods{
         .add(feedbackData);
   }
 
-  Future<Stream<QuerySnapshot>> getHotelFeedbacks(String hotelName) async {
-    return await FirebaseFirestore.instance
+  Stream<QuerySnapshot> getHotelFeedbacks(String hotelName) {
+    return FirebaseFirestore.instance
         .collection("Hotel")
         .doc(hotelName)
         .collection("Feedbacks")
@@ -90,5 +90,17 @@ class DatabaseMethods{
         .where("hotelName", isEqualTo: hotelName)
         .get();
   }
-} 
+  // 💳 WALLET METHODS
+  Future<DocumentSnapshot> getUserDetails(String userId) async {
+    return await FirebaseFirestore.instance.collection("users").doc(userId).get();
+  }
+
+  Future updateUserWallet(String userId, String amount) async {
+    return await FirebaseFirestore.instance
+        .collection("users")
+        .doc(userId)
+        .update({"wallet": amount});
+  }
+}
+ 
 

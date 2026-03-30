@@ -25,7 +25,7 @@ class _BookingState extends State<Booking> {
   getOnTheLoad() async {
     String? userId = await SharedpreferenceHelper().getUserId() ?? FirebaseAuth.instance.currentUser?.uid;
     if (userId != null) {
-      bookingStream = await DatabaseMethods().getUserBookings(userId);
+      bookingStream = DatabaseMethods().getUserBookings(userId);
       setState(() {});
     }
   }

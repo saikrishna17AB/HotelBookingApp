@@ -282,10 +282,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                             ),
                           );
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => OwnerHome()),
-                          );
+                          Navigator.pop(context);
                         },
                         child: Center(
                           child: Container(

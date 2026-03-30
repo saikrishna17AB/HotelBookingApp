@@ -6,6 +6,7 @@ import '../services/database.dart';
 import '../services/shared_pref.dart';
 import 'package:random_string/random_string.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:math';
 class DetailPage extends StatefulWidget {
   final String name, price, desc, ownerEmail;
   final int totalRooms, currentlyBooked;
@@ -53,8 +54,8 @@ class _DetailPageState extends State<DetailPage> {
     getReviews();
   }
 
-  getReviews() async {
-    reviewStream = await DatabaseMethods().getHotelFeedbacks(widget.name);
+  getReviews() {
+    reviewStream = DatabaseMethods().getHotelFeedbacks(widget.name);
     setState(() {});
   }
 
@@ -549,31 +550,85 @@ class _DetailPageState extends State<DetailPage> {
                         return;
                       }
 
-                      String bookingId = randomAlphaNumeric(10);
-                      Map<String, dynamic> bookingInfoMap = {
-                        "hotelName": widget.name,
-                        "startDate": _formatDate(startDate),
-                        "endDate": _formatDate(endDate),
-                        "guests": guests,
-                        "rooms": rooms,
-                        "totalAmount": finalamount,
-                        "userId": userId,
-                        "userName": userName ?? "User",
-                        "bookingId": bookingId,
-                        "status": "Booked",
-                        "ownerEmail": widget.ownerEmail,
-                      };
+                      // 💳 NEW: WALLET BALANCE CHECK
+                      DocumentSnapshot userDoc = await DatabaseMethods().getUserDetails(userId);
+                      int currentWalletBalance = 0;
 
-                      await DatabaseMethods().bookHotel(bookingInfoMap, bookingId);
+                      if (userDoc.exists) {
+                        Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+                        if (userData != null && userData.containsKey("wallet")) {
+                          currentWalletBalance = int.parse(userData["wallet"]);
+                        } else {
+                          // 💰 Initialize balance to 0 if missing
+                          currentWalletBalance = 0;
+                          await DatabaseMethods().updateUserWallet(userId, currentWalletBalance.toString());
+                        }
+                      }
 
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          backgroundColor: Colors.green,
-                          content: Text("Booking successful!"),
-                        ),
-                      );
-                      
-                      Navigator.pop(context);
+                      if (currentWalletBalance < finalamount) {
+                         if (mounted) {
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(
+                               backgroundColor: Colors.redAccent,
+                               content: Text("Insufficient Balance! Current: ₹$currentWalletBalance, Required: ₹$finalamount"),
+                               action: SnackBarAction(label: "Top-up", textColor: Colors.white, onPressed: () {
+                                 // Optional: Redirect to wallet is complex with BottomNav, but we can suggest it
+                               }),
+                             ),
+                           );
+                         }
+                         return;
+                      }
+
+                      // 🔵 Proceed with Booking and Deduction
+                      if (mounted) {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
+                        );
+                      }
+
+                      try {
+                        // 💸 Deduct from Wallet
+                        int newBalance = currentWalletBalance - finalamount;
+                        await DatabaseMethods().updateUserWallet(userId, newBalance.toString());
+
+                        String bookingId = randomAlphaNumeric(10);
+                        Map<String, dynamic> bookingInfoMap = {
+                          "hotelName": widget.name,
+                          "startDate": _formatDate(startDate),
+                          "endDate": _formatDate(endDate),
+                          "guests": guests,
+                          "rooms": rooms,
+                          "totalAmount": finalamount,
+                          "userId": userId,
+                          "userName": userName ?? "User",
+                          "bookingId": bookingId,
+                          "status": "Booked",
+                          "ownerEmail": widget.ownerEmail,
+                        };
+
+                        await DatabaseMethods().bookHotel(bookingInfoMap, bookingId);
+                        
+                        if (mounted) {
+                          Navigator.pop(context); // Close the loading spinner
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text("Booking successful! Money deducted from wallet."),
+                            ),
+                          );
+                          Navigator.pop(context); // Return to Home
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          Navigator.pop(context); // Close the loading spinner
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text("Error: $e"), backgroundColor: Colors.redAccent),
+                          );
+                        }
+                      }
                     },
                     child: Container(
                       width: double.infinity,

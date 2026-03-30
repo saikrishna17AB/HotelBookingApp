@@ -26,48 +26,78 @@ class _SignUpState extends State<SignUp> {
   String selectedRole = "User"; // Default role
 
   Future<void> registration() async {
-    if(password !="" && namecontroller.text != "" && mailcontroller.text!= ""){
-      try{
-        UserCredential userCredential=await FirebaseAuth.instance
-        .createUserWithEmailAndPassword(email: email, password: password);
+    if (password != "" && namecontroller.text != "" && mailcontroller.text != "") {
+      try {
+        // 1. Check if the user already exists in the TARGET collection
+        var checkSnapshot = selectedRole == "User" 
+          ? await DatabaseMethods().getUserbyEmail(email)
+          : await DatabaseMethods().getHotelOwnerByEmail(email);
 
-        //Upload data to firebase
-        String id=randomAlphaNumeric(10);
-        Map<String, dynamic> userInfoMap={
-          "Name": namecontroller.text,
-          "Email": mailcontroller.text,
-          "Id": id,
-          
-        };
-
-        await SharedpreferenceHelper().saveUserName(namecontroller.text);
-        await SharedpreferenceHelper().saveUserEmail(mailcontroller.text);
-        await SharedpreferenceHelper().saveUserId(id);
-        await SharedpreferenceHelper().saveUserRole(selectedRole);
-
-        if (selectedRole == "User") {
-          await DatabaseMethods().addUserInfo(userInfoMap, id);
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Bottomnav()));
-        } else {
-          await DatabaseMethods().addHotelOwnerInfo(userInfoMap, id);
-          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OwnerBottomNav()));
-        }
+        if (checkSnapshot.docs.isNotEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: Colors.green,
+              backgroundColor: Colors.orangeAccent,
               content: Text(
-                "Registered successfully!",
-                style: TextStyle(fontSize: 18.0,),
+                "Account already exists as ${selectedRole == "User" ? "User" : "Hotel Owner"}",
+                style: const TextStyle(fontSize: 18.0),
               ),
             ),
           );
-          // Navigator.push(context,MaterialPageRoute(builder:(context)=> Bottomnav()),);
+          return;
+        }
 
+        // 2. Try to create the auth user
+        UserCredential? userCredential;
+        try {
+          userCredential = await FirebaseAuth.instance
+              .createUserWithEmailAndPassword(email: email, password: password);
+        } on FirebaseAuthException catch (e) {
+          if (e.code == 'email-already-in-use') {
+            // Email is in use in Auth, but not in this role (we checked),
+            // so we skip creating the auth user and just add the database entry.
+          } else {
+            throw e; // Rethrow other auth errors
+          }
+        }
+
+        // 3. Upload data to firebase
+        String id = randomAlphaNumeric(10);
+        Map<String, dynamic> userInfoMap = {
+          "Name": namecontroller.text,
+          "Email": mailcontroller.text,
+          "Id": id,
+        };
+
+        if (selectedRole == "User") {
+          await DatabaseMethods().addUserInfo(userInfoMap, id);
+          await SharedpreferenceHelper().saveUserName(namecontroller.text);
+          await SharedpreferenceHelper().saveUserEmail(mailcontroller.text);
+          await SharedpreferenceHelper().saveUserId(id);
+          await SharedpreferenceHelper().saveUserRole(selectedRole);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const Bottomnav()));
+        } else {
+          await DatabaseMethods().addHotelOwnerInfo(userInfoMap, id);
+          await SharedpreferenceHelper().saveUserName(namecontroller.text);
+          await SharedpreferenceHelper().saveUserEmail(mailcontroller.text);
+          await SharedpreferenceHelper().saveUserId(id);
+          await SharedpreferenceHelper().saveUserRole(selectedRole);
+          Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => const OwnerBottomNav()));
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Colors.green,
+            content: Text(
+              "Registered successfully!",
+              style: TextStyle(fontSize: 18.0),
+            ),
+          ),
+        );
 
       } on FirebaseAuthException catch (e) {
-        if(e.code == 'weak-password'){
+        if (e.code == 'weak-password') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               backgroundColor: Colors.orangeAccent,
               content: Text(
                 "Password provided is too weak",
@@ -75,18 +105,21 @@ class _SignUpState extends State<SignUp> {
               ),
             ),
           );
-        }
-        else if(e.code=="email-already-in-use"){
-          ScaffoldMessenger.of(context).showSnackBar(
+        } else {
+           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              backgroundColor: Colors.orangeAccent,
-              content: Text(
-                "Email ID already exists",
-                style: TextStyle(fontSize: 18.0),
-              ),
+              backgroundColor: Colors.redAccent,
+              content: Text(e.message ?? "Authentication Error"),
             ),
           );
         }
+      } catch (e) {
+         ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: Colors.redAccent,
+            content: Text("Error: ${e.toString()}"),
+          ),
+        );
       }
     }
   }

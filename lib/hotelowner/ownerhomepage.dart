@@ -139,30 +139,24 @@ class _OwnerHomeState extends State<OwnerHome> {
                               ),
                               const SizedBox(height: 5),
                               // 🔥 DASHBOARD RATINGS
-                              FutureBuilder<Stream<QuerySnapshot>>(
-                                future: DatabaseMethods().getHotelFeedbacks(data["name"] ?? ""),
-                                builder: (context, futureSnapshot) {
-                                  if (!futureSnapshot.hasData) return const SizedBox.shrink();
-                                  return StreamBuilder<QuerySnapshot>(
-                                    stream: futureSnapshot.data,
-                                    builder: (context, streamSnapshot) {
-                                      if (!streamSnapshot.hasData || streamSnapshot.data!.docs.isEmpty) {
-                                        return const Text("No reviews", style: TextStyle(color: Colors.grey, fontSize: 13));
-                                      }
-                                      double total = 0;
-                                      for (var doc in streamSnapshot.data!.docs) {
-                                        total += (doc.data() as Map<String, dynamic>)["rating"] ?? 0;
-                                      }
-                                      double avg = total / streamSnapshot.data!.docs.length;
-                                      return Row(
-                                        children: [
-                                          const Icon(Icons.star, color: Colors.orange, size: 16),
-                                          const SizedBox(width: 4),
-                                          Text("${avg.toStringAsFixed(1)} (${streamSnapshot.data!.docs.length})", 
-                                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                                        ],
-                                      );
-                                    }
+                              StreamBuilder<QuerySnapshot>(
+                                stream: DatabaseMethods().getHotelFeedbacks(data["name"] ?? ""),
+                                builder: (context, streamSnapshot) {
+                                  if (!streamSnapshot.hasData || streamSnapshot.data!.docs.isEmpty) {
+                                    return const Text("No reviews", style: TextStyle(color: Colors.grey, fontSize: 13));
+                                  }
+                                  double total = 0;
+                                  for (var doc in streamSnapshot.data!.docs) {
+                                    total += (doc.data() as Map<String, dynamic>)["rating"] ?? 0;
+                                  }
+                                  double avg = total / streamSnapshot.data!.docs.length;
+                                  return Row(
+                                    children: [
+                                      const Icon(Icons.star, color: Colors.orange, size: 16),
+                                      const SizedBox(width: 4),
+                                      Text("${avg.toStringAsFixed(1)} (${streamSnapshot.data!.docs.length})", 
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                    ],
                                   );
                                 }
                               ),

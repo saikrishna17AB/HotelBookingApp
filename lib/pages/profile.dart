@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../services/shared_pref.dart';
 import '../services/widget_support.dart';
-import '../pages/login.dart';
+import 'login.dart';
+import '../services/database.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -14,6 +16,8 @@ class Profile extends StatefulWidget {
 class _ProfileState extends State<Profile> {
   String? name;
   String? email;
+  String? wallet;
+  String? userId;
 
   @override
   void initState() {
@@ -22,6 +26,7 @@ class _ProfileState extends State<Profile> {
   }
 
   Future<void> _loadUserData() async {
+    userId = await SharedpreferenceHelper().getUserId();
     name = await SharedpreferenceHelper().getUserName();
     email = await SharedpreferenceHelper().getUserEmail();
     
@@ -29,7 +34,28 @@ class _ProfileState extends State<Profile> {
     if (email == null && FirebaseAuth.instance.currentUser != null) {
        email = FirebaseAuth.instance.currentUser?.email;
     }
+    
+    if (userId != null) {
+      await _fetchWalletBalance();
+    }
+    
     setState(() {});
+  }
+
+  Future<void> _fetchWalletBalance() async {
+    if (userId == null) return;
+    
+    DocumentSnapshot userDoc = await DatabaseMethods().getUserDetails(userId!);
+    if (userDoc.exists) {
+      Map<String, dynamic>? data = userDoc.data() as Map<String, dynamic>?;
+      if (data != null && data.containsKey("wallet")) {
+        wallet = data["wallet"];
+      } else {
+        // 💰 Initialize balance to 0 if missing
+        wallet = "0";
+        await DatabaseMethods().updateUserWallet(userId!, wallet!);
+      }
+    }
   }
 
   Future<void> _logout() async {
@@ -39,7 +65,7 @@ class _ProfileState extends State<Profile> {
     if (mounted) {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LogIN()),
+        MaterialPageRoute(builder: (context) => LogIN()),
       );
     }
   }
@@ -114,6 +140,35 @@ class _ProfileState extends State<Profile> {
                           Text(name ?? "Loading...", style: AppWidget.headlinetextstyle(20.0)),
                         ],
                       )
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20.0),
+
+              // 💳 Wallet Field
+              Material(
+                elevation: 3.0,
+                borderRadius: BorderRadius.circular(15),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 15.0),
+                  width: MediaQuery.of(context).size.width,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.wallet, color: Colors.green, size: 30),
+                      const SizedBox(width: 15.0),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("Wallet Balance", style: AppWidget.normaltextstyle(16.0)),
+                          Text("₹${wallet ?? '...'}", style: AppWidget.headlinetextstyle(20.0)),
+                        ],
+                      ),
                     ],
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../pages/home.dart';
 import '../pages/booking.dart';
 import '../pages/profile.dart';
+import '../pages/wallet.dart';
 class Bottomnav extends StatefulWidget {
   const Bottomnav({super.key});
 
@@ -17,7 +18,7 @@ class _BottomnavState extends State<Bottomnav> {
   late Home HomePage;
   late Profile profile;
   late Booking booking;
-  // late Wallet wallet;
+  late Wallet wallet;
 
   int currentTabIndex=0;
 
@@ -26,9 +27,9 @@ class _BottomnavState extends State<Bottomnav> {
     HomePage=Home();
     booking=Booking();
     profile=Profile();
-    // wallet=Wallet();
+    wallet=Wallet();
 
-    pages=[HomePage, booking, Container(color: Colors.white, child: Center(child: Text('Wallet Coming Soon'))), profile];
+    pages=[HomePage, booking, wallet, profile];
     super.initState();
   }
 
