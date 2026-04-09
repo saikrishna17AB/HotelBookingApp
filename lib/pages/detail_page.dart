@@ -8,7 +8,7 @@ import 'package:random_string/random_string.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
 class DetailPage extends StatefulWidget {
-  final String name, price, desc, ownerEmail;
+  final String name, price, desc, ownerEmail, image;
   final int totalRooms, currentlyBooked;
   final bool wifi, hdtv;
 
@@ -22,6 +22,7 @@ class DetailPage extends StatefulWidget {
     required this.totalRooms,
     required this.currentlyBooked,
     required this.ownerEmail,
+    required this.image,
   });
 
   @override
@@ -135,10 +136,15 @@ class _DetailPageState extends State<DetailPage> {
                       bottomLeft: Radius.circular(50),
                       bottomRight: Radius.circular(50),
                     ),
-                    child: Image.asset(
-                      "images/hotel1.jpg",
-                      fit: BoxFit.cover,
-                    ),
+                    child: widget.image.startsWith("http")
+                        ? Image.network(
+                            widget.image,
+                            fit: BoxFit.cover,
+                          )
+                        : Image.asset(
+                            widget.image,
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
 
@@ -607,6 +613,7 @@ class _DetailPageState extends State<DetailPage> {
                           "bookingId": bookingId,
                           "status": "Booked",
                           "ownerEmail": widget.ownerEmail,
+                          "image": widget.image, // 🔥 PASS IMAGE TO BOOKING
                         };
 
                         await DatabaseMethods().bookHotel(bookingInfoMap, bookingId);

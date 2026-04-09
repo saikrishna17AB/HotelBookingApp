@@ -4,6 +4,7 @@ import '../services/database.dart';
 import '../services/shared_pref.dart';
 import '../services/widget_support.dart';
 import 'hoteldetails.dart';
+import 'update_hotel.dart';
 import '../pages/login.dart';
 import '../pages/detail_page.dart';
 
@@ -78,6 +79,7 @@ class _OwnerHomeState extends State<OwnerHome> {
                   totalRooms: data["totalRooms"] ?? 5,
                   currentlyBooked: data["currentlyBooked"] ?? 0,
                   ownerEmail: data["ownerEmail"] ?? "Legacy",
+                  image: data["image"] ?? "images/hotel1.jpg",
                 )));
               },
               child: Container(
@@ -95,12 +97,19 @@ class _OwnerHomeState extends State<OwnerHome> {
                       children: [
                         ClipRRect(
                           borderRadius: BorderRadius.circular(15),
-                          child: Image.asset(
-                            data["image"] ?? "images/hotel1.jpg",
-                            height: 100,
-                            width: 100,
-                            fit: BoxFit.cover,
-                          ),
+                          child: (data["image"] ?? "images/hotel1.jpg").toString().startsWith("http")
+                            ? Image.network(
+                                data["image"],
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.asset(
+                                data["image"] ?? "images/hotel1.jpg",
+                                height: 100,
+                                width: 100,
+                                fit: BoxFit.cover,
+                              ),
                         ),
                         const SizedBox(width: 20),
                         Expanded(
@@ -114,6 +123,15 @@ class _OwnerHomeState extends State<OwnerHome> {
                                     child: Text(data["name"] ?? "No Name", 
                                         style: AppWidget.headlinetextstyle(20.0),
                                         overflow: TextOverflow.ellipsis),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, color: Colors.blue),
+                                    onPressed: () {
+                                      Navigator.push(context, MaterialPageRoute(builder: (context) => UpdateHotel(
+                                        hotelData: data,
+                                        hotelId: ds.id,
+                                      )));
+                                    },
                                   ),
                                   IconButton(
                                     icon: const Icon(Icons.delete, color: Colors.redAccent),

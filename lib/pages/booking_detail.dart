@@ -31,12 +31,19 @@ class BookingDetail extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(20),
-                child: Image.asset(
-                  "images/hotel1.jpg", 
-                  width: MediaQuery.of(context).size.width,
-                  height: 250,
-                  fit: BoxFit.cover,
-                ),
+                child: (bookingData["image"] ?? "images/hotel1.jpg").toString().startsWith("http")
+                  ? Image.network(
+                      bookingData["image"],
+                      width: MediaQuery.of(context).size.width,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    )
+                  : Image.asset(
+                      bookingData["image"] ?? "images/hotel1.jpg", 
+                      width: MediaQuery.of(context).size.width,
+                      height: 250,
+                      fit: BoxFit.cover,
+                    ),
               ),
               const SizedBox(height: 20),
               

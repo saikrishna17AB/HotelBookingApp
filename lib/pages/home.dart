@@ -88,6 +88,7 @@ class _HomeState extends State<Home> {
                       totalRooms: data["totalRooms"] ?? 5,
                       currentlyBooked: data["currentlyBooked"] ?? 0,
                       ownerEmail: data["ownerEmail"] ?? "Legacy",
+                      image: data["image"] ?? "images/hotel1.jpg",
                     )));
                   },
                   child: Container(
@@ -106,12 +107,19 @@ class _HomeState extends State<Home> {
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(30),
-                              child: Image.asset(
-                                data["image"] ?? "images/hotel1.jpg",
-                                width: double.infinity,
-                                height: 130,
-                                fit: BoxFit.cover,
-                              ),
+                              child: (data["image"] ?? "images/hotel1.jpg").toString().startsWith("http")
+                                ? Image.network(
+                                    data["image"],
+                                    width: double.infinity,
+                                    height: 130,
+                                    fit: BoxFit.cover,
+                                  )
+                                : Image.asset(
+                                    data["image"] ?? "images/hotel1.jpg",
+                                    width: double.infinity,
+                                    height: 130,
+                                    fit: BoxFit.cover,
+                                  ),
                             ),
                             const SizedBox(height: 10),
                             Padding(

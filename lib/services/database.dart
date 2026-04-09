@@ -101,6 +101,13 @@ class DatabaseMethods{
         .doc(userId)
         .update({"wallet": amount});
   }
+
+  Future updateHotel(String id, Map<String, dynamic> hotelInfoMap) async {
+    return await FirebaseFirestore.instance
+        .collection("Hotel")
+        .doc(id)
+        .update(hotelInfoMap);
+  }
 }
  
 

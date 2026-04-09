@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/widget_support.dart';
-import '../hotelowner/ownerhomepage.dart';
-import 'package:random_string/random_string.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/database.dart';
 import '../services/shared_pref.dart';
 import 'dart:io';
@@ -9,22 +8,55 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class Hoteldetail extends StatefulWidget {
-  const Hoteldetail({super.key});
+class UpdateHotel extends StatefulWidget {
+  final Map<String, dynamic> hotelData;
+  final String hotelId;
+
+  const UpdateHotel({super.key, required this.hotelData, required this.hotelId});
 
   @override
-  State<Hoteldetail> createState() => _HoteldetailState();
+  State<UpdateHotel> createState() => _UpdateHotelState();
 }
 
-class _HoteldetailState extends State<Hoteldetail> {
+class _UpdateHotelState extends State<UpdateHotel> {
   String? ownerEmail;
   File? selectedImage;
+  String? existingImageUrl;
   final ImagePicker _picker = ImagePicker();
   bool isUploading = false;
+
+  late TextEditingController hotelnamecontroller;
+  late TextEditingController hotelchargescontroller;
+  late TextEditingController hoteladdresscontroller;
+  late TextEditingController hoteldesccontroller;
+  late TextEditingController hotelroomscontroller;
+  late TextEditingController initialbookedcontroller;
+  late TextEditingController hotelcitycontroller;
+
+  bool isWifi = false;
+  bool isHdtv = false;
+  bool isFood = false;
+  bool isPool = false;
 
   @override
   void initState() {
     super.initState();
+    
+    // Initialize data from widget.hotelData
+    hotelnamecontroller = TextEditingController(text: widget.hotelData["name"]);
+    hotelchargescontroller = TextEditingController(text: widget.hotelData["price"].toString());
+    hoteladdresscontroller = TextEditingController(text: widget.hotelData["location"]);
+    hoteldesccontroller = TextEditingController(text: widget.hotelData["description"]);
+    hotelroomscontroller = TextEditingController(text: widget.hotelData["totalRooms"].toString());
+    initialbookedcontroller = TextEditingController(text: widget.hotelData["currentlyBooked"].toString());
+    hotelcitycontroller = TextEditingController(text: widget.hotelData["city"] ?? "");
+    
+    existingImageUrl = widget.hotelData["image"];
+    isWifi = widget.hotelData["wifi"] ?? false;
+    isHdtv = widget.hotelData["hdtv"] ?? false;
+    isFood = widget.hotelData["food"] ?? false;
+    isPool = widget.hotelData["pool"] ?? false;
+
     getOnLoad();
   }
 
@@ -32,19 +64,6 @@ class _HoteldetailState extends State<Hoteldetail> {
     ownerEmail = await SharedpreferenceHelper().getUserEmail();
     setState(() {});
   }
-
-  bool isWifi = false;
-  bool isHdtv = false;
-  bool isFood = false;
-  bool isPool = false;
-
-  TextEditingController hotelnamecontroller = TextEditingController();
-  TextEditingController hotelchargescontroller = TextEditingController();
-  TextEditingController hoteladdresscontroller = TextEditingController();
-  TextEditingController hoteldesccontroller = TextEditingController();
-  TextEditingController hotelroomscontroller = TextEditingController();
-  TextEditingController initialbookedcontroller = TextEditingController();
-  TextEditingController hotelcitycontroller = TextEditingController();
 
   Future getImage() async {
     var image = await _picker.pickImage(source: ImageSource.gallery);
@@ -79,11 +98,9 @@ class _HoteldetailState extends State<Hoteldetail> {
         var jsonResponse = jsonDecode(responseString);
         return jsonResponse['secure_url'];
       } else {
-        print("Upload failed with status: ${response.statusCode}");
         return null;
       }
     } catch (e) {
-      print("Error uploading to Cloudinary: $e");
       return null;
     } finally {
       setState(() {
@@ -97,37 +114,48 @@ class _HoteldetailState extends State<Hoteldetail> {
     return Scaffold(
       backgroundColor: Colors.blue,
       body: Container(
-        margin: EdgeInsets.only(top: 40.0),
+        margin: const EdgeInsets.only(top: 40.0),
         child: Column(
           children: [
-
             // 🔵 HEADER
-            Center(
-              child: Text(
-                "Hotel Details",
-                style: AppWidget.boldwhitetextstyle(26.0),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                  ),
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        "Update Hotel",
+                        style: TextStyle(color: Colors.white, fontSize: 26.0, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 30), // Balance the back button
+                ],
               ),
             ),
 
-            SizedBox(height: 20.0),
+            const SizedBox(height: 20.0),
 
             Expanded(
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.0),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(30),
                     topRight: Radius.circular(30),
                   ),
                 ),
-
                 child: SingleChildScrollView(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔥 INTERACTIVE IMAGE PICKER
                       Center(
@@ -144,27 +172,34 @@ class _HoteldetailState extends State<Hoteldetail> {
                                         width: 200,
                                         fit: BoxFit.cover,
                                       )
-                                    : Image.asset(
-                                        "images/hotel1.jpg",
-                                        height: 200,
-                                        width: 200,
-                                        fit: BoxFit.cover,
-                                      ),
+                                    : (existingImageUrl != null && existingImageUrl!.startsWith("http"))
+                                        ? Image.network(
+                                            existingImageUrl!,
+                                            height: 200,
+                                            width: 200,
+                                            fit: BoxFit.cover,
+                                          )
+                                        : Image.asset(
+                                            existingImageUrl ?? "images/hotel1.jpg",
+                                            height: 200,
+                                            width: 200,
+                                            fit: BoxFit.cover,
+                                          ),
                               ),
                               if (isUploading)
                                 Positioned.fill(
                                   child: Container(
                                     color: Colors.black26,
-                                    child: Center(child: CircularProgressIndicator(color: Colors.white)),
+                                    child: const Center(child: CircularProgressIndicator(color: Colors.white)),
                                   ),
                                 ),
                               Positioned(
                                 bottom: 10,
                                 right: 10,
                                 child: Container(
-                                  padding: EdgeInsets.all(5),
-                                  decoration: BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                                  child: Icon(Icons.add_a_photo, color: Colors.white, size: 20),
+                                  padding: const EdgeInsets.all(5),
+                                  decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                                  child: const Icon(Icons.add_a_photo, color: Colors.white, size: 20),
                                 ),
                               )
                             ],
@@ -172,87 +207,93 @@ class _HoteldetailState extends State<Hoteldetail> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      // 🔹 HOTEL NAME
-                      Text("Hotel name", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      // 🔹 HOTEL NAME (READ ONLY)
+                      Text("Hotel name (Fixed)", style: AppWidget.normaltextstyle(20.0)),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hotelnamecontroller,
-                        decoration: InputDecoration(
-                          hintText: "Enter Hotel name",
+                        enabled: false,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFEEEEEE),
+                          filled: true,
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔹 PRICE
                       Text("Hotel room price", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hotelchargescontroller,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: "Enter room price",
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔹 TOTAL ROOMS
                       Text("Total Rooms Available", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hotelroomscontroller,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: "Enter total number of rooms",
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      Text("Currently Booked Rooms (if any)", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      Text("Currently Booked Rooms", style: AppWidget.normaltextstyle(20.0)),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: initialbookedcontroller,
                         keyboardType: TextInputType.number,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: "Enter number of already occupied rooms",
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      // 🔹 CITY
-                      Text("Hotel City", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      // 🔹 CITY (READ ONLY)
+                      Text("Hotel City (Fixed)", style: AppWidget.normaltextstyle(20.0)),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hotelcitycontroller,
-                        decoration: InputDecoration(
-                          hintText: "Enter city (e.g. Delhi, Mumbai)",
+                        enabled: false,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFEEEEEE),
+                          filled: true,
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      // 🔹 ADDRESS
-                      Text("Hotel Address", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      // 🔹 ADDRESS (READ ONLY)
+                      Text("Hotel Address (Fixed)", style: AppWidget.normaltextstyle(20.0)),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hoteladdresscontroller,
-                        decoration: InputDecoration(
-                          hintText: "Enter Hotel Address",
+                        enabled: false,
+                        decoration: const InputDecoration(
+                          fillColor: Color(0xFFEEEEEE),
+                          filled: true,
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔹 SERVICES
                       Text("Services", style: AppWidget.normaltextstyle(20.0)),
@@ -260,7 +301,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                       CheckboxListTile(
                         value: isWifi,
                         onChanged: (val) => setState(() => isWifi = val!),
-                        title: Row(
+                        title: const Row(
                           children: [
                             Icon(Icons.wifi),
                             SizedBox(width: 10),
@@ -272,7 +313,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                       CheckboxListTile(
                         value: isHdtv,
                         onChanged: (val) => setState(() => isHdtv = val!),
-                        title: Row(
+                        title: const Row(
                           children: [
                             Icon(Icons.tv),
                             SizedBox(width: 10),
@@ -284,7 +325,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                       CheckboxListTile(
                         value: isFood,
                         onChanged: (val) => setState(() => isFood = val!),
-                        title: Row(
+                        title: const Row(
                           children: [
                             Icon(Icons.restaurant),
                             SizedBox(width: 10),
@@ -296,7 +337,7 @@ class _HoteldetailState extends State<Hoteldetail> {
                       CheckboxListTile(
                         value: isPool,
                         onChanged: (val) => setState(() => isPool = val!),
-                        title: Row(
+                        title: const Row(
                           children: [
                             Icon(Icons.pool),
                             SizedBox(width: 10),
@@ -305,38 +346,35 @@ class _HoteldetailState extends State<Hoteldetail> {
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
                       // 🔹 DESCRIPTION
                       Text("Hotel Description", style: AppWidget.normaltextstyle(20.0)),
-                      SizedBox(height: 5),
+                      const SizedBox(height: 5),
                       TextField(
                         controller: hoteldesccontroller,
                         maxLines: 4,
                         maxLength: 200,
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: "Enter about your hotel",
                           border: OutlineInputBorder(),
                         ),
                       ),
 
-                      SizedBox(height: 20),
+                      const SizedBox(height: 20),
 
-                      // 🔥 SUBMIT BUTTON
+                      // 🔥 UPDATE BUTTON
                       GestureDetector(
                         onTap: () async {
-                          // ✅ VALIDATION
-                          if (hotelnamecontroller.text.isEmpty ||
-                              hotelchargescontroller.text.isEmpty ||
-                              hotelroomscontroller.text.isEmpty ||
-                              hoteladdresscontroller.text.isEmpty) {
+                          if (hotelchargescontroller.text.isEmpty ||
+                              hotelroomscontroller.text.isEmpty) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Please fill all fields")),
+                              const SnackBar(content: Text("Please fill all required fields")),
                             );
                             return;
                           }
 
-                          String imageUrl = "images/hotel1.jpg"; // Default
+                          String imageUrl = existingImageUrl ?? "images/hotel1.jpg";
 
                           if (selectedImage != null) {
                             String? uploadedUrl = await uploadToCloudinary(selectedImage!);
@@ -344,36 +382,29 @@ class _HoteldetailState extends State<Hoteldetail> {
                               imageUrl = uploadedUrl;
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text("Image upload failed. Using default image.")),
+                                const SnackBar(content: Text("Image upload failed. Keeping old image.")),
                               );
                             }
                           }
 
-                          String addId = randomAlphaNumeric(10);
-
-                          Map<String, dynamic> addHotel = {
-                            "image": imageUrl, // 🔥 DYNAMIC URL
-                            "name": hotelnamecontroller.text,
+                          Map<String, dynamic> updatedHotel = {
+                            "image": imageUrl,
                             "price": hotelchargescontroller.text,
                             "totalRooms": int.tryParse(hotelroomscontroller.text) ?? 5,
                             "currentlyBooked": int.tryParse(initialbookedcontroller.text) ?? 0,
-                            "location": hoteladdresscontroller.text,
                             "description": hoteldesccontroller.text,
                             "wifi": isWifi,
                             "hdtv": isHdtv,
                             "food": isFood,
                             "pool": isPool,
-                            "id": addId,
-                            "city": hotelcitycontroller.text.trim().isEmpty ? "Delhi" : hotelcitycontroller.text.trim(),
-                            "ownerEmail": ownerEmail ?? "Legacy",
                           };
 
-                          await DatabaseMethods().addHotel(addHotel, addId);
+                          await DatabaseMethods().updateHotel(widget.hotelId, updatedHotel);
 
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
+                            const SnackBar(
                               backgroundColor: Colors.green,
-                              content: Text("Hotel uploaded successfully"),
+                              content: Text("Hotel updated successfully"),
                             ),
                           );
 
@@ -387,17 +418,17 @@ class _HoteldetailState extends State<Hoteldetail> {
                               color: Colors.blue,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Center(
+                            child: const Center(
                               child: Text(
-                                "Submit",
-                                style: AppWidget.boldwhitetextstyle(26.0),
+                                "Update Details",
+                                style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ),
                         ),
                       ),
 
-                      SizedBox(height: 30),
+                      const SizedBox(height: 30),
                     ],
                   ),
                 ),
