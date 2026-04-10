@@ -14,7 +14,7 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   Stream? hotelStream;
-  String selectedCity = "Delhi";
+  String selectedCity = "None";
   String searchQuery = "";
   final TextEditingController searchController = TextEditingController();
 
@@ -80,6 +80,7 @@ class _HomeState extends State<Home> {
                 return GestureDetector(
                   onTap: () {
                     Navigator.push(context, MaterialPageRoute(builder: (context) => DetailPage(
+                      id: data["id"] ?? "",
                       desc: data["description"] ?? "",
                       hdtv: data["hdtv"] ?? false,
                       wifi: data["wifi"] ?? false,
@@ -179,10 +180,11 @@ class _HomeState extends State<Home> {
 
     for (var doc in docs) {
       Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-      String hName = data["name"] ?? "";
+      String hotelId = doc.id;
+      data["id"] = hotelId;
       
-      // Calculate Average Rating by fetching the Feedbacks sub-collection using hotel name (consistent with existing data)
-      var feedbackQuery = await FirebaseFirestore.instance.collection("Hotel").doc(hName).collection("Feedbacks").get();
+      // Calculate Average Rating by fetching the Feedbacks sub-collection using hotel id
+      var feedbackQuery = await FirebaseFirestore.instance.collection("Hotel").doc(hotelId).collection("Feedbacks").get();
       
       double total = 0;
       int count = feedbackQuery.docs.length;

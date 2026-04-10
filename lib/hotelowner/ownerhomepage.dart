@@ -71,6 +71,7 @@ class _OwnerHomeState extends State<OwnerHome> {
             return GestureDetector(
               onTap: () {
                 Navigator.push(context, MaterialPageRoute(builder: (context) => DetailPage(
+                  id: ds.id,
                   desc: data["description"] ?? "",
                   hdtv: data["hdtv"] ?? false,
                   wifi: data["wifi"] ?? false,
@@ -158,7 +159,7 @@ class _OwnerHomeState extends State<OwnerHome> {
                               const SizedBox(height: 5),
                               // 🔥 DASHBOARD RATINGS
                               StreamBuilder<QuerySnapshot>(
-                                stream: DatabaseMethods().getHotelFeedbacks(data["name"] ?? ""),
+                                stream: DatabaseMethods().getHotelFeedbacks(ds.id),
                                 builder: (context, streamSnapshot) {
                                   if (!streamSnapshot.hasData || streamSnapshot.data!.docs.isEmpty) {
                                     return const Text("No reviews", style: TextStyle(color: Colors.grey, fontSize: 13));

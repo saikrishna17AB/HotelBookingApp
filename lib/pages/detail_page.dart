@@ -8,12 +8,13 @@ import 'package:random_string/random_string.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:math';
 class DetailPage extends StatefulWidget {
-  final String name, price, desc, ownerEmail, image;
+  final String id, name, price, desc, ownerEmail, image;
   final int totalRooms, currentlyBooked;
   final bool wifi, hdtv;
 
   const DetailPage({
     super.key,
+    required this.id,
     required this.desc,
     required this.hdtv,
     required this.wifi,
@@ -56,7 +57,7 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   getReviews() {
-    reviewStream = DatabaseMethods().getHotelFeedbacks(widget.name);
+    reviewStream = DatabaseMethods().getHotelFeedbacks(widget.id);
     setState(() {});
   }
 
@@ -602,6 +603,7 @@ class _DetailPageState extends State<DetailPage> {
 
                         String bookingId = randomAlphaNumeric(10);
                         Map<String, dynamic> bookingInfoMap = {
+                          "hotelId": widget.id,
                           "hotelName": widget.name,
                           "startDate": _formatDate(startDate),
                           "endDate": _formatDate(endDate),

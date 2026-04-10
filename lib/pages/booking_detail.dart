@@ -231,7 +231,7 @@ class BookingDetail extends StatelessWidget {
                     "date": DateTime.now().toIso8601String(),
                   };
                   
-                  await DatabaseMethods().addHotelFeedback(bookingData["hotelName"], feedbackMap);
+                  await DatabaseMethods().addHotelFeedback(bookingData["hotelId"], feedbackMap);
                   await DatabaseMethods().updateBookingFeedbackStatus(bookingData["bookingId"], rating, feedbackController.text);
                   
                   if (context.mounted) {

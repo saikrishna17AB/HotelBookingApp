@@ -6,10 +6,12 @@ import 'pages/login.dart';
 import 'pages/home.dart';
 import 'pages/detail_page.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'services/database.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  await DatabaseMethods().migrateRatings(); // ONE-TIME MIGRATION CALL
   runApp(const MyApp());
 }
 

@@ -31,7 +31,7 @@ class _LogINState extends State<LogIN> {
       password: password,
     );
 
-    // ✅ Fetch user details from Firestore and update cache
+    // Fetch user details from Firestore and update cache
     var snapshot = selectedRole == "User" 
       ? await DatabaseMethods().getUserbyEmail(email)
       : await DatabaseMethods().getHotelOwnerByEmail(email);
@@ -43,7 +43,7 @@ class _LogINState extends State<LogIN> {
       await SharedpreferenceHelper().saveUserId(ds["Id"]);
       await SharedpreferenceHelper().saveUserRole(selectedRole);
 
-      // ✅ Redirect to correct Home
+      // Redirect to correct Home
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -180,16 +180,6 @@ class _LogINState extends State<LogIN> {
             ],
           ),
         ),
-
-            SizedBox(height:30.0,),
-            Padding(
-              padding: const EdgeInsets.only(right: 20.0,),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children:[
-                Text("Forgot Password?", style: AppWidget.normaltextstyle(18.0),),
-              ],),
-            ),
 
             SizedBox(height: 30.0,),
             GestureDetector(

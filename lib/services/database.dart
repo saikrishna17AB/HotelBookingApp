@@ -56,21 +56,64 @@ class DatabaseMethods{
         .get();
   }
 
-  Future addHotelFeedback(String hotelName, Map<String, dynamic> feedbackData) async {
+  Future addHotelFeedback(String hotelId, Map<String, dynamic> feedbackData) async {
     return await FirebaseFirestore.instance
         .collection("Hotel")
-        .doc(hotelName)
+        .doc(hotelId)
         .collection("Feedbacks")
         .add(feedbackData);
   }
 
-  Stream<QuerySnapshot> getHotelFeedbacks(String hotelName) {
+  Stream<QuerySnapshot> getHotelFeedbacks(String hotelId) {
     return FirebaseFirestore.instance
         .collection("Hotel")
-        .doc(hotelName)
+        .doc(hotelId)
         .collection("Feedbacks")
         .orderBy("date", descending: true)
         .snapshots();
+  }
+
+  Future<void> migrateRatings() async {
+    // ONE-TIME MIGRATION SCRIPT
+    // Fetch all hotels
+    var hotelsSnapshot = await FirebaseFirestore.instance.collection("Hotel").get();
+    
+    for (var doc in hotelsSnapshot.docs) {
+      if (doc.id == (doc.data()["name"] ?? "")) {
+        continue; // This is a legacy document serving as a name-based feedback holder. We'll skip migrating onto itself.
+      }
+      
+      String? hotelName = doc.data()["name"];
+      if (hotelName != null && hotelName.isNotEmpty) {
+        // Fetch feedbacks stored under hotelName
+        var oldFeedbacks = await FirebaseFirestore.instance
+            .collection("Hotel")
+            .doc(hotelName)
+            .collection("Feedbacks")
+            .get();
+            
+        // Copy them to the correct hotelId document
+        for (var feedback in oldFeedbacks.docs) {
+          // Check if this feedback already exists to avoid duplicates
+          var existing = await FirebaseFirestore.instance
+            .collection("Hotel")
+            .doc(doc.id)
+            .collection("Feedbacks")
+            .where("date", isEqualTo: feedback.data()["date"])
+            .where("username", isEqualTo: feedback.data()["username"])
+            .get();
+            
+          if (existing.docs.isEmpty) {
+            await FirebaseFirestore.instance
+                .collection("Hotel")
+                .doc(doc.id)
+                .collection("Feedbacks")
+                .add(feedback.data());
+          }
+        }
+      }
+    }
+    print("Migration of ratings completed!");
   }
 
   Future updateBookingFeedbackStatus(String bookingId, int rating, String review) async {
